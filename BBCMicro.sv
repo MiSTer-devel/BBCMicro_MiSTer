@@ -183,7 +183,6 @@ wire        sd_buff_wr;
 wire        img_mounted;
 wire        img_readonly;
 wire [63:0] img_size;
-wire        sd_conf;
 wire        sd_ack_conf;
 
 wire [64:0] RTC;
@@ -214,7 +213,6 @@ hps_io #(.STRLEN($size(CONF_STR)>>3)) hps_io
 	.sd_rd(sd_rd),
 	.sd_wr(sd_wr),
 	.sd_ack(sd_ack),
-	.sd_conf(sd_conf),
 	.sd_ack_conf(sd_ack_conf),
 	.sd_buff_addr(sd_buff_addr),
 	.sd_buff_dout(sd_buff_dout),
@@ -404,6 +402,7 @@ bbc_micro_core BBCMicro
 	.SDMISO(sdmiso),
 	.SDCLK(sdclk),
 	.SDMOSI(sdmosi),
+	.SDSS(sdss),
 
 	.caps_led(),
 	.shift_led(),
@@ -470,6 +469,7 @@ video_mixer #(640, 1) mixer
 wire sdclk;
 wire sdmosi;
 wire sdmiso = vsd_sel ? vsdmiso : SD_MISO;
+wire sdss;
 
 reg vsd_sel = 0;
 always @(posedge clk_sys) if(img_mounted) vsd_sel <= |img_size;
@@ -479,19 +479,17 @@ sd_card sd_card
 (
 	.*,
 
-	.allow_sdhc(1),
-	.sd_conf(sd_conf),
-	.sd_sdhc(),
-
-	.spi_clk(sdclk),
-	.spi_ss(~vsd_sel),
-	.spi_di(sdmosi),
-	.spi_do(vsdmiso)
+	.clk_spi(clk_sys),
+	.sdhc(1),
+	.sck(sdclk),
+	.ss(sdss | ~vsd_sel),
+	.mosi(sdmosi),
+	.miso(vsdmiso)
 );
 
-assign SD_CS   = vsd_sel;
-assign SD_SCK  = sdclk & ~SD_CS;
-assign SD_MOSI = sdmosi & ~SD_CS;
+assign SD_CS   = sdss   |  vsd_sel;
+assign SD_SCK  = sdclk  & ~vsd_sel;
+assign SD_MOSI = sdmosi & ~vsd_sel;
 
 reg sd_act;
 
