@@ -370,6 +370,11 @@ always @(posedge clk_sys) old_we <= mem_we_n;
 
 wire reset_req;
 
+wire [7:0] joya_x = 8'hFF - {~ax[7],ax[6:0]};
+wire [7:0] joya_y = 8'hFF - {~ay[7],ay[6:0]};
+wire [7:0] joyb_x = 8'hFF - {~joy2_x[7],joy2_x[6:0]};
+wire [7:0] joyb_y = 8'hFF - {~joy2_y[7],joy2_y[6:0]};
+
 bbc_micro_core BBCMicro
 (
 	.clock_32(clk_32),
@@ -411,12 +416,12 @@ bbc_micro_core BBCMicro
 
 	.keyb_dip({4'd0, ~status[12], ~status[9:7]}),
 
-	.joystick1_x(status[11] ? {~joy2_x[7],joy2_x[6:0], 4'd0} : {~ax[7],ax[6:0], 4'd0}),
-	.joystick1_y(status[11] ? {~joy2_y[7],joy2_y[6:0], 4'd0} : {~ay[7],ay[6:0], 4'd0}),
-	.joystick1_fire(status[11] ? ~joy2[4] : ~af),
+	.joystick1_x(    status[11] ? {joyb_x,joyb_x[7:4]} : {joya_x,joya_x[7:4]}),
+	.joystick1_y(    status[11] ? {joyb_y,joyb_y[7:4]} : {joya_y,joya_y[7:4]}),
+	.joystick1_fire( status[11] ? ~joy2[4] : ~af),
 
-	.joystick2_x(~status[11] ? {~joy2_x[7],joy2_x[6:0], 4'd0} : {~ax[7],ax[6:0], 4'd0}),
-	.joystick2_y(~status[11] ? {~joy2_y[7],joy2_y[6:0], 4'd0} : {~ay[7],ay[6:0], 4'd0}),
+	.joystick2_x(   ~status[11] ? {joya_x,joya_x[7:4]} : {joyb_x,joyb_x[7:4]}),
+	.joystick2_y(   ~status[11] ? {joya_y,joya_y[7:4]} : {joyb_y,joyb_y[7:4]}),
 	.joystick2_fire(~status[11] ? ~joy2[4] : ~af),
 
 	.m128_mode(m128),
