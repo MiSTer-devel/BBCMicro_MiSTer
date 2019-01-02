@@ -23,7 +23,7 @@ Core supports secondary SD card which should be formatted in FAT16/FAT32. BEEB.M
 
 Alternatively core supports *.VHD images on primary SD card - in this case secondary SD card is not required.
 
-**VHD** image is a simple FAT16/32 image with single BEEB.MMB file inside. You can create such image in various applications, for example in WinImage.
+**VHD** image is just renamed BEEB.MMB file.
 
 ### Notes:
 * BREAK key combo is **CTRL+F11**
