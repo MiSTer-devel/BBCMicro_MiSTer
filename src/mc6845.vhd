@@ -354,7 +354,7 @@ begin
 						-- end of v_total_adj - it shouldn't make any difference to the
 						-- output
 						if r08_interlace(0) = '1' then
-							odd_field <= not odd_field;
+							--odd_field <= not odd_field;
 						else
 							odd_field <= '0';
 						end if;
@@ -421,7 +421,7 @@ begin
 		-- coinscides with the start of the active display, and in intelaced
 		-- mode the vsync of the odd field is delayed by half a scan line
 		--if (odd_field = '0' and h_counter = 0) or (odd_field = '1' and h_counter = "0" & r00_h_total(7 downto 1)) then
-		if h_counter = 0 then
+		if h_counter = r02_h_sync_pos then
 			v_sync_start <= '1';
 		end if;
 	end process;
