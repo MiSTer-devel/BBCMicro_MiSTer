@@ -615,7 +615,7 @@ architecture Behavioral of R65C02 is
 	signal Z: std_logic; -- Zero flag
 	signal I: std_logic; -- Interrupt flag
 	signal D: std_logic; -- Decimal mode
-	signal B: std_logic := '0'; -- Break software interrupt
+	constant B: std_logic := '0'; -- Break software interrupt
 	signal R: std_logic; -- always 1
 	signal V: std_logic; -- Overflow
 	signal N: std_logic; -- Negative

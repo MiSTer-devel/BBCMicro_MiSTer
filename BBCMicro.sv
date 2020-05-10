@@ -171,7 +171,8 @@ pll pll
 	.outclk_0(clk_sys)
 );
 
-reg ce_32, ce_24;
+(* direct_enable=1 *) reg ce_32;
+(* direct_enable=1 *) reg ce_24;
 always @(negedge clk_sys) begin
 	reg [1:0] div24, div32;
 	
@@ -201,6 +202,7 @@ wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
 wire        forced_scandoubler;
+wire [21:0] gamma_bus;
 
 wire [31:0] sd_lba;
 wire        sd_rd;
@@ -227,6 +229,7 @@ hps_io #(.STRLEN($size(CONF_STR)>>3)) hps_io
 	.buttons(buttons),
 	.status(status),
 	.forced_scandoubler(forced_scandoubler),
+	.gamma_bus(gamma_bus),
 
 	.RTC(RTC),
 
@@ -469,9 +472,9 @@ wire hs, vs, hblank, vblank, ce_pix, clk_sel;
 wire r,g,b;
 
 assign CLK_VIDEO = clk_sys;
-video_mixer #(640, 1) mixer
+video_mixer #(640, 1, 1) mixer
 (
-	.clk_sys(CLK_VIDEO),
+	.clk_vid(CLK_VIDEO),
 	
 	.ce_pix(ce_pix & (clk_sel ? ce_32 : ce_24)),
 	.ce_pix_out(CE_PIXEL),
@@ -479,6 +482,7 @@ video_mixer #(640, 1) mixer
 	.hq2x(scale == 1),
 	.scanlines(0),
 	.scandoubler(scale || forced_scandoubler),
+	.gamma_bus(gamma_bus),
 
 	.R({4{r}}),
 	.G({4{g}}),

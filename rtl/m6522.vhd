@@ -100,6 +100,7 @@ architecture RTL of M6522 is
 
    signal phase             : std_logic_vector(1 downto 0):="00";
    signal p2_h_t1           : std_logic;
+   signal p2_h_t2           : std_logic;
    signal cs                : std_logic;
 
    -- registers
@@ -733,14 +734,17 @@ begin
    -- Ensure we don't start counting until the P2 clock after r_acr is changed
    p_timer2_ena : process
    begin
-      wait until rising_edge(I_P2_H);
-      if r_acr(5) = '0' then
-         t2_cnt_clk <= '1';
-      else
-         t2_cnt_clk <= '0';
-      end if;
+      wait until rising_edge(CLK);
+      p2_h_t2 <= I_P2_H;
+      if (p2_h_t2 = '0') and (I_P2_H = '1') then
+        if r_acr(5) = '0' then
+           t2_cnt_clk <= '1';
+        else
+           t2_cnt_clk <= '0';
+        end if;
+		end if;
    end process;
- 
+
    p_timer2_done : process
       variable done : boolean;
       variable done_sr : boolean;
