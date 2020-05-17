@@ -74,7 +74,7 @@ architecture Gideon of via6522 is
     constant pio_default : pio_t := (others => (others => '0'));
     constant latch_reset_pattern : std_logic_vector(15 downto 0) := X"5550";
 
-    signal last_data     : std_logic_vector(7 downto 0) := X"55";
+    --signal last_data     : std_logic_vector(7 downto 0) := X"55";
     
     signal pio_i         : pio_t;
     signal port_a_c      : std_logic_vector(7 downto 0) := (others => '0');
@@ -279,7 +279,7 @@ begin
 
             -- Writes --
             if wen='1' and falling = '1' then
-                last_data <= data_in;
+                --last_data <= data_in;
                 case addr is
                 when X"0" => -- ORB
                     pio_i.prb <= data_in;

@@ -200,7 +200,7 @@ wire        ioctl_download;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
-wire  [7:0] ioctl_dout;
+wire [15:0] ioctl_dout;
 wire        forced_scandoubler;
 wire [21:0] gamma_bus;
 
@@ -208,9 +208,9 @@ wire [31:0] sd_lba;
 wire        sd_rd;
 wire        sd_wr;
 wire        sd_ack;
-wire  [8:0] sd_buff_addr;
-wire  [7:0] sd_buff_dout;
-wire  [7:0] sd_buff_din;
+wire  [7:0] sd_buff_addr;
+wire [15:0] sd_buff_dout;
+wire [15:0] sd_buff_din;
 wire        sd_buff_wr;
 wire        img_mounted;
 wire        img_readonly;
@@ -219,7 +219,7 @@ wire        sd_ack_conf;
 
 wire [64:0] RTC;
 
-hps_io #(.STRLEN($size(CONF_STR)>>3)) hps_io
+hps_io #(.STRLEN($size(CONF_STR)>>3), .WIDE(1)) hps_io
 (
 	.clk_sys(clk_sys),
 	.HPS_BUS(HPS_BUS),
@@ -275,16 +275,13 @@ wire [18:0] mem_addr;
 wire  [7:0] mem_din;
 
 reg  [17:0] rom_addr;
-wire  [7:0] rom_dout;
+reg  [15:0] rom_dout;
 reg   [7:0] rom_data;
-spram #(8, 18, 229376, "roms/rom.mif") rom
-(
-	.clock(clk_sys),
-	.address(reset ? ioctl_addr[17:0] : rom_addr),
-	.data(ioctl_dout),
-	.wren(!ioctl_index && ioctl_wr && reset),
-	.q(rom_dout)
-);
+
+(* ram_init_file = "roms/rom.mif" *) reg [15:0] rom[114688];
+always @(posedge clk_sys) if(!ioctl_index && ioctl_wr && reset) rom[reset ? ioctl_addr[17:1] : rom_addr[17:1]] <= {ioctl_dout[7:0], ioctl_dout[15:8]};
+always @(posedge clk_sys) rom_dout <= rom[rom_addr[17:1]];
+
 
 // Beeb ROM Images
 
@@ -360,20 +357,16 @@ always_comb begin
 		'b1_11_00,
 		'b1_11_01,
 		'b1_11_10,
-		'b1_11_11: rom_data = rom_dout;
+		'b1_11_11: rom_data = rom_addr[0] ? rom_dout[7:0] : rom_dout[15:8];
 		  default: rom_data = 0;
 	endcase
 end
 
-wire  [7:0] ram_dout;
-spram #(8, 18, 212992) ram
-(
-	.clock(clk_sys),
-	.address(mem_addr[17:0]),
-	.data(mem_din),
-	.wren(mem_addr[18] & old_we & ~mem_we_n),
-	.q(ram_dout)
-);
+reg [7:0] ram_dout;
+reg [7:0] ram[212992];
+always @(posedge clk_sys) if(mem_addr[18] & old_we & ~mem_we_n) ram[mem_addr[17:0]] <= mem_din;
+always @(posedge clk_sys) ram_dout <= ram[mem_addr[17:0]];
+
 
 reg old_we;
 always @(posedge clk_sys) old_we <= mem_we_n;
@@ -517,7 +510,7 @@ reg vsd_sel = 0;
 always @(posedge clk_sys) if(img_mounted) vsd_sel <= |img_size;
 
 wire vsdmiso;
-sd_card sd_card
+sd_card #(1) sd_card
 (
 	.*,
 
@@ -584,62 +577,5 @@ always @(posedge clk_sys) begin
 		my <= 0;
 	end
 end
-
-endmodule
-
-//////////////////////////////////////////////
-
-module spram #(parameter DATAWIDTH=8, ADDRWIDTH=8, NUMWORDS=1<<ADDRWIDTH, MEM_INIT_FILE="")
-(
-	input	                 clock,
-	input	 [ADDRWIDTH-1:0] address,
-	input	 [DATAWIDTH-1:0] data,
-	input	                 wren,
-	output [DATAWIDTH-1:0] q
-);
-
-altsyncram altsyncram_component
-(
-	.address_a (address),
-	.clock0 (clock),
-	.data_a (data),
-	.wren_a (wren),
-	.q_a (q),
-	.aclr0 (1'b0),
-	.aclr1 (1'b0),
-	.address_b (1'b1),
-	.addressstall_a (1'b0),
-	.addressstall_b (1'b0),
-	.byteena_a (1'b1),
-	.byteena_b (1'b1),
-	.clock1 (1'b1),
-	.clocken0 (1'b1),
-	.clocken1 (1'b1),
-	.clocken2 (1'b1),
-	.clocken3 (1'b1),
-	.data_b (1'b1),
-	.eccstatus (),
-	.q_b (),
-	.rden_a (1'b1),
-	.rden_b (1'b1),
-	.wren_b (1'b0)
-);
-
-defparam
-	altsyncram_component.clock_enable_input_a = "BYPASS",
-	altsyncram_component.clock_enable_output_a = "BYPASS",
-	altsyncram_component.init_file = MEM_INIT_FILE,
-	altsyncram_component.intended_device_family = "Cyclone V",
-	altsyncram_component.lpm_type = "altsyncram",
-	altsyncram_component.numwords_a = NUMWORDS,
-	altsyncram_component.operation_mode = "SINGLE_PORT",
-	altsyncram_component.outdata_aclr_a = "NONE",
-	altsyncram_component.outdata_reg_a = "UNREGISTERED",
-	altsyncram_component.power_up_uninitialized = "FALSE",
-	altsyncram_component.read_during_write_mode_port_a = "NEW_DATA_NO_NBE_READ",
-	altsyncram_component.widthad_a = ADDRWIDTH,
-	altsyncram_component.width_a = DATAWIDTH,
-	altsyncram_component.width_byteena_a = 1;
-
 
 endmodule
