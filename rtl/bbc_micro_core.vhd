@@ -234,7 +234,7 @@ signal ttxt_hblank      : std_logic;
 
 -- System VIA signals
 signal sys_via_do       : std_logic_vector(7 downto 0);
-signal sys_via_irq_n    : std_logic;
+signal sys_via_irq      : std_logic;
 signal sys_via_ca1_in   : std_logic := '0';
 signal sys_via_ca2_in   : std_logic := '0';
 signal sys_via_pa_in    : std_logic_vector(7 downto 0);
@@ -247,22 +247,22 @@ signal sys_via_do_r     : std_logic_vector (7 downto 0);
 
 -- User VIA signals
 signal user_via_do      : std_logic_vector(7 downto 0);
-signal user_via_irq_n   : std_logic;
+signal user_via_irq     : std_logic;
 signal user_via_ca1_in  : std_logic := '0';
 signal user_via_pa_in   : std_logic_vector(7 downto 0);
 signal user_via_pa_out  : std_logic_vector(7 downto 0);
 signal user_via_cb1_in  : std_logic := '0';
 signal user_via_cb1_out : std_logic;
-signal user_via_cb1_oe_n: std_logic;
+signal user_via_cb1_oe  : std_logic;
 signal user_via_cb2_in  : std_logic := '0';
 signal user_via_pb_in   : std_logic_vector(7 downto 0);
 signal user_via_pb_out  : std_logic_vector(7 downto 0);
-signal user_via_pb_oe_n : std_logic_vector(7 downto 0);
+signal user_via_pb_oe   : std_logic_vector(7 downto 0);
 signal user_via_do_r    : std_logic_vector (7 downto 0);
 
 -- Mouse VIA signals
 signal mouse_via_do     : std_logic_vector(7 downto 0);
-signal mouse_via_irq_n  : std_logic;
+signal mouse_via_irq    : std_logic;
 signal mouse_via_pa_in  : std_logic_vector(7 downto 0);
 signal mouse_via_pa_out : std_logic_vector(7 downto 0);
 signal mouse_via_cb1_in : std_logic := '0';
@@ -476,103 +476,75 @@ begin
         );
 
     -- System VIA
-    system_via : entity work.m6522 port map (
-        cpu_a(3 downto 0),
-        cpu_do,
-        sys_via_do,
-        open,
-        cpu_r_nw,
-        sys_via_enable,
-        '0', -- nCS2
-        sys_via_irq_n,
-        sys_via_ca1_in,
-        sys_via_ca2_in,
-        open,
-        open,
-        sys_via_pa_in,
-        sys_via_pa_out,
-        open,
-        sys_via_cb1_in,
-        open,
-        open,
-        sys_via_cb2_in,
-        open,
-        open,
-        sys_via_pb_in,
-        sys_via_pb_out,
-        open,
-        mhz1_clken,
-        reset_n,
-        mhz4_clken,
-        clock_32
-        );
+	system_via: work.via6522 port map (
+		clock       => clock_32,
+		rising      => mhz2_clken and     mhz1_clken,
+		falling     => mhz2_clken and not mhz1_clken,
+		reset       => not reset_n,
+		addr        => cpu_a(3 downto 0),
+		wen         => sys_via_enable and not cpu_r_nw,
+		ren         => sys_via_enable and     cpu_r_nw,
+		data_in     => cpu_do,
+		data_out    => sys_via_do,
+		port_a_i    => sys_via_pa_in,
+		port_a_o    => sys_via_pa_out,
+		port_b_i    => sys_via_pb_in,
+		port_b_o    => sys_via_pb_out,
+		ca1_i       => sys_via_ca1_in,
+		ca2_i       => sys_via_ca2_in,
+		cb1_i       => sys_via_cb1_in,
+		cb2_i       => sys_via_cb2_in,
+		irq         => sys_via_irq
+	);
 
-    -- User VIA
-    user_via : entity work.m6522 port map (
-        cpu_a(3 downto 0),
-        cpu_do,
-        user_via_do,
-        open,
-        cpu_r_nw,
-        user_via_enable,
-        '0', -- nCS2
-        user_via_irq_n,
-        user_via_ca1_in,
-        '0',
-        open,
-        open,
-        user_via_pa_in,
-        user_via_pa_out,
-        open,
-        user_via_cb1_in,
-        user_via_cb1_out,
-        user_via_cb1_oe_n,
-        user_via_cb2_in,
-        open,
-        open,
-        user_via_pb_in,
-        user_via_pb_out,
-        user_via_pb_oe_n,
-        mhz1_clken,
-        reset_n,
-        mhz4_clken,
-        clock_32
-        );
-
+    user_via : work.via6522 port map (
+		clock       => clock_32,
+		rising      => mhz2_clken and     mhz1_clken,
+		falling     => mhz2_clken and not mhz1_clken,
+		reset       => not reset_n,
+		addr        => cpu_a(3 downto 0),
+		wen         => user_via_enable and not cpu_r_nw,
+		ren         => user_via_enable and     cpu_r_nw,
+		data_in     => cpu_do,
+		data_out    => user_via_do,
+		port_a_i    => user_via_pa_in,
+		port_a_o    => user_via_pa_out,
+		port_b_i    => user_via_pb_in,
+		port_b_o    => user_via_pb_out,
+		port_b_t    => user_via_pb_oe,
+		ca1_i       => user_via_ca1_in,
+		ca2_i       => '0',
+		cb1_i       => user_via_cb1_in,
+		cb1_o       => user_via_cb1_out,
+		cb1_t       => user_via_cb1_oe,
+		cb2_i       => user_via_cb2_in,
+		irq         => user_via_irq
+	);
+	
     -- Second VIA
     -- If this is included, it becomes the via at FE60 and the user via (above)
     -- is re-addressed to FE80
     GenMouse: if IncludeAMXMouse generate
-        mouse_via : entity work.m6522 port map (
-            cpu_a(3 downto 0),
-            cpu_do,
-            mouse_via_do,
-            open,
-            cpu_r_nw,
-            mouse_via_enable,
-            '0', -- nCS2
-            mouse_via_irq_n,
-            '0',
-            '0',
-            open,
-            open,
-            mouse_via_pa_in,
-            mouse_via_pa_out,
-            open,
-            mouse_via_cb1_in,
-            open,
-            open,
-            mouse_via_cb2_in,
-            open,
-            open,
-            mouse_via_pb_in,
-            open,
-            open,
-            mhz1_clken,
-            reset_n,
-            mhz4_clken,
-            clock_32
-        );
+		mouse_via: work.via6522 port map (
+			clock       => clock_32,
+			rising      => mhz2_clken and     mhz1_clken,
+			falling     => mhz2_clken and not mhz1_clken,
+			reset       => not reset_n,
+			addr        => cpu_a(3 downto 0),
+			wen         => mouse_via_enable and not cpu_r_nw,
+			ren         => mouse_via_enable and     cpu_r_nw,
+			data_in     => cpu_do,
+			data_out    => mouse_via_do,
+			port_a_i    => mouse_via_pa_in,
+			port_a_o    => mouse_via_pa_out,
+			port_b_i    => mouse_via_pb_in,
+			ca1_i       => '0',
+			ca2_i       => '0',
+			cb1_i       => mouse_via_cb1_in,
+			cb2_i       => mouse_via_cb2_in,
+			irq         => mouse_via_irq
+		);
+	
         -- BBC Micro User Port (Mouse use)
         --  2 - CB1 - X Axis
         --  6 - D0  - X Dir
@@ -600,7 +572,7 @@ begin
     end generate;
     GenNotMouse: if not IncludeAMXMouse generate
         mouse_via_do <= x"FE";
-        mouse_via_irq_n <= '1';
+        mouse_via_irq <= '0';
     end generate;
 
     -- PS/2 Keyboard
@@ -1037,8 +1009,8 @@ begin
         "11111111"     when io_fred = '1' or io_jim = '1' else
         (others => '0'); -- un-decoded locations are pulled down by RP1
 
-    cpu_irq_n <= not ((not sys_via_irq_n) or (not user_via_irq_n) or (not mouse_via_irq_n) or acc_irr) when m128_mode = '1' else
-                 not ((not sys_via_irq_n) or (not user_via_irq_n) or (not mouse_via_irq_n));
+    cpu_irq_n <= not (sys_via_irq or user_via_irq or mouse_via_irq or acc_irr) when m128_mode = '1' else
+                 not (sys_via_irq or user_via_irq or mouse_via_irq);
 
     -- Synchronous outputs to External Memory
 
@@ -1253,15 +1225,15 @@ begin
     -- MMBEEB
 
     -- SDCLK is driven from either PB1 or CB1 depending on the SR Mode
-    sdclk_int     <= user_via_pb_out(1) when user_via_pb_oe_n(1) = '0' else
-                     user_via_cb1_out   when user_via_cb1_oe_n = '0' else
+    sdclk_int     <= user_via_pb_out(1) when user_via_pb_oe(1) = '1' else
+                     user_via_cb1_out   when user_via_cb1_oe = '1' else
                      '1';
 
     SDCLK           <= sdclk_int;
     user_via_cb1_in <= sdclk_int;
 
     -- SDMOSI is always driven from PB0
-    SDMOSI        <= user_via_pb_out(0) when user_via_pb_oe_n(0) = '0' else
+    SDMOSI        <= user_via_pb_out(0) when user_via_pb_oe(0) = '1' else
                      '1';
 
     -- SDMISO is always read from CB2

@@ -24,7 +24,7 @@ set_global_assignment -name VHDL_FILE rtl/sn76489/sn76489_attenuator.vhd
 set_global_assignment -name VHDL_FILE rtl/R65Cx2.vhd
 set_global_assignment -name QIP_FILE rtl/t65/t65.qip
 set_global_assignment -name VHDL_FILE rtl/upd7002.vhd
-set_global_assignment -name VHDL_FILE rtl/m6522.vhd
+set_global_assignment -name VHDL_FILE rtl/via6522.vhd
 set_global_assignment -name VHDL_FILE rtl/rtc.vhd
 set_global_assignment -name VERILOG_FILE rtl/rtc_chip.v
 set_global_assignment -name VHDL_FILE rtl/saa5050.vhd
