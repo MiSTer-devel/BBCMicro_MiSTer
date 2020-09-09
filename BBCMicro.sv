@@ -459,7 +459,7 @@ wire [7:0] audio_sn;
 assign AUDIO_L = {audio_sn, 8'd0};
 assign AUDIO_R = {audio_sn, 8'd0};
 assign AUDIO_MIX = 0;
-assign AUDIO_S = 1;
+assign AUDIO_S = 0;
 
 wire hs, vs, hblank, vblank, ce_pix, clk_sel;
 wire r,g,b;

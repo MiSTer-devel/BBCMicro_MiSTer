@@ -91,7 +91,7 @@ entity bbc_micro_core is
 		video_hsync    : out std_logic;
 
 		-- Audio
-		audio_sn       : out signed (7 downto 0);
+		audio_sn       : out std_logic_vector (7 downto 0);
 
 		-- External memory (e.g. SRAM and/or FLASH)
 		-- 512KB logical address space
