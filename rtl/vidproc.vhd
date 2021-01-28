@@ -125,7 +125,7 @@ begin
 			r0_cursor1 <= '0';
 			r0_cursor2 <= '0';
 			r0_crtc_2mhz <= '0';
-			r0_pixel_rate <= "01";
+			r0_pixel_rate <= "00";
 			r0_teletext <= '0';
 			r0_flash <= '0';
 			
