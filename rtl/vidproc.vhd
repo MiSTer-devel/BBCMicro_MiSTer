@@ -125,7 +125,7 @@ begin
 			r0_cursor1 <= '0';
 			r0_cursor2 <= '0';
 			r0_crtc_2mhz <= '0';
-			r0_pixel_rate <= "00";
+			r0_pixel_rate <= "01";
 			r0_teletext <= '0';
 			r0_flash <= '0';
 			
@@ -190,16 +190,14 @@ begin
 		if nRESET = '0' then
 			shiftreg <= (others => '0');
 		elsif rising_edge(CLOCK) then
-            if clken_pixel = '1' then
-                if clken_fetch = '1' then
-                    -- Fetch next byte from RAM into shift register.  This always occurs in
-                    -- cycle 0, and also in cycle 8 if the CRTC is clocked at double rate.
-                    shiftreg <= DI_RAM;
-                else
-                    -- Clock shift register and input '1' at LSB
-                    shiftreg <= shiftreg(6 downto 0) & "1";
-                end if;
-            end if;
+				 if clken_fetch = '1' then
+					  -- Fetch next byte from RAM into shift register.  This always occurs in
+					  -- cycle 0, and also in cycle 8 if the CRTC is clocked at double rate.
+					  shiftreg <= DI_RAM;
+				 elsif clken_pixel = '1' then 
+					  -- Clock shift register and input '1' at LSB
+					  shiftreg <= shiftreg(6 downto 0) & "1";
+				 end if;
 		end if;
 	end process;
 	
@@ -289,7 +287,7 @@ begin
     G <= GG when r0_teletext = '0' else G_IN xor cursor_invert; 
     B <= BB when r0_teletext = '0' else B_IN xor cursor_invert;
 
-	 CE_PIX <= clken_pixel;
+	 CE_PIX <= CLKEN;
 	 CLK_SEL <= not r0_teletext;
 
 end architecture;
