@@ -46,39 +46,40 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity vidproc is
 port (
-	CLOCK		:	in	std_logic;
+	CLOCK      : in  std_logic;
 	-- Clock enable qualifies display cycles (interleaved with CPU cycles)
-	CLKEN		:	in	std_logic;
-	nRESET		:	in	std_logic;
+	CLKEN      : in  std_logic;
+	nRESET     : in  std_logic;
 	
-	CLK_SEL  :	out	std_logic;
-	CE_PIX 	:	out	std_logic;
+	CLK_SEL    : out std_logic;
+	CE_PIX     : out std_logic;
+	PIX_RATE   : out std_logic_vector(1 downto 0);
 
 	-- Clock enable output to CRTC
-	CLKEN_CRTC	:	out	std_logic;
+	CLKEN_CRTC : out std_logic;
 	
 	-- Bus interface
-	ENABLE		:	in	std_logic;
-	A0			:	in	std_logic;
+	ENABLE     : in  std_logic;
+	A0         : in  std_logic;
 	-- CPU data bus (for register writes)
-	DI_CPU		:	in	std_logic_vector(7 downto 0);
+	DI_CPU     : in  std_logic_vector(7 downto 0);
 	-- Display RAM data bus (for display data fetch)
-	DI_RAM		:	in	std_logic_vector(7 downto 0);
+	DI_RAM     : in  std_logic_vector(7 downto 0);
 	
 	-- Control interface
-	nINVERT		:	in	std_logic;
-	DISEN		:	in	std_logic;
-	CURSOR		:	in	std_logic;
+	nINVERT    : in  std_logic;
+	DISEN      : in  std_logic;
+	CURSOR     : in  std_logic;
 	
 	-- Video in (teletext mode)
-	R_IN		:	in	std_logic;
-	G_IN		:	in	std_logic;
-	B_IN		:	in	std_logic;
+	R_IN       : in  std_logic;
+	G_IN       : in  std_logic;
+	B_IN       : in  std_logic;
 	
 	-- Video out
-	R			:	out	std_logic;
-	G			:	out	std_logic;
-	B			:	out	std_logic
+	R          : out std_logic;
+	G          : out std_logic;
+	B          : out std_logic
 	);
 end entity;
 
@@ -156,9 +157,9 @@ begin
 	-- programmed at r0_pixel_rate
 	-- 00 = /8, 01 = /4, 10 = /2, 11 = /1
 	clken_pixel <= 
-		CLKEN													when r0_pixel_rate = "11" else
-		(CLKEN and not clken_counter(0))						when r0_pixel_rate = "10" else
-		(CLKEN and not (clken_counter(0) or clken_counter(1)))	when r0_pixel_rate = "01" else
+		CLKEN													              when r0_pixel_rate = "11" else
+		(CLKEN and not clken_counter(0))						        when r0_pixel_rate = "10" else
+		(CLKEN and not (clken_counter(0) or clken_counter(1)))  when r0_pixel_rate = "01" else
 		(CLKEN and not (clken_counter(0) or clken_counter(1) or clken_counter(2)));
 	-- The CRT controller is always enabled in the 15th cycle, so that the result
 	-- is ready for latching into the shift register in cycle 0.  If 2 MHz mode is
@@ -289,7 +290,8 @@ begin
     G <= GG when r0_teletext = '0' else G_IN xor cursor_invert; 
     B <= BB when r0_teletext = '0' else B_IN xor cursor_invert;
 
-	 CE_PIX <= clken_pixel;
-	 CLK_SEL <= not r0_teletext;
+    CE_PIX <= clken_pixel;
+    CLK_SEL <= not r0_teletext;
+    PIX_RATE <= r0_pixel_rate;
 
 end architecture;

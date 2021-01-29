@@ -82,6 +82,7 @@ entity bbc_micro_core is
 		-- Video
 		video_sel      : out std_logic;
 		video_cepix    : out std_logic;
+		video_cerate   : out std_logic_vector(1 downto 0);
 		video_red      : out std_logic;
 		video_green    : out std_logic;
 		video_blue     : out std_logic;
@@ -446,8 +447,9 @@ begin
         clock_32,
         vid_clken,
         reset_n,
-		  clk_sel,
-		  crtc_cepix,
+        clk_sel,
+        crtc_cepix,
+        video_cerate,
         crtc_clken,
         vidproc_enable,
         cpu_a(0),

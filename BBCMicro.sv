@@ -451,6 +451,9 @@ wire [7:0] joya_y = 8'hFF - {~ay[7],ay[6:0]};
 wire [7:0] joyb_x = 8'hFF - {~joy2_x[7],joy2_x[6:0]};
 wire [7:0] joyb_y = 8'hFF - {~joy2_y[7],joy2_y[6:0]};
 
+wire [1:0] ce_rate;
+wire       ce_vid;
+
 bbc_micro_core BBCMicro
 (
 	.clock_32(clk_32),
@@ -463,7 +466,8 @@ bbc_micro_core BBCMicro
 	.ps2_mouse(status[10] ? ps2_mouse : 25'd0),
 
 	.video_sel(clk_sel),
-	.video_cepix(ce_pix),
+	.video_cepix(ce_vid),
+	.video_cerate(ce_rate),
 	.video_red(r),
 	.video_green(g),
 	.video_blue(b),
@@ -511,15 +515,40 @@ assign AUDIO_R = {audio_sn, 8'd0};
 assign AUDIO_MIX = 0;
 assign AUDIO_S = 0;
 
-wire hs, vs, hblank, vblank, ce_pix, clk_sel;
+wire ce_vids = (ce_vid & (clk_sel ? ce_32 : ce_24));
+reg  ce_pix;
+always @(posedge CLK_VIDEO) begin
+	reg old_vs;
+	reg [2:0] rate;
+	reg vrate1, vrate2;
+	reg [2:0] div;
+	
+	old_vs <= vs;
+	if(old_vs & ~vs) begin
+		rate <= 3'b100;
+		vrate2 <= vrate1;
+		vrate1 <= 0;
+	end
+	
+	if(~hblank & ~vblank & ce_vids) begin
+		if(rate[2]) rate <= ce_rate;
+		else if(rate[1:0] != ce_rate) vrate1 <= 1;
+	end
+	
+	div <= div + 1'd1;
+	if(div == 5) div <= 0;
+
+	ce_pix <= vrate2 ? !div : ce_vids;
+end
+
+wire hs, vs, hblank, vblank, clk_sel;
 wire r,g,b;
 
 assign CLK_VIDEO = clk_sys;
 video_mixer #(640, 1, 1) mixer
 (
 	.clk_vid(CLK_VIDEO),
-	
-	.ce_pix(ce_pix & (clk_sel ? ce_32 : ce_24)),
+	.ce_pix(ce_pix),
 	.ce_pix_out(CE_PIXEL),
 
 	.hq2x(scale == 1),
