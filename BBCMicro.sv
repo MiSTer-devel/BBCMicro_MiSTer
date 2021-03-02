@@ -37,8 +37,9 @@ module emu
 	output        CE_PIXEL,
 
 	//Video aspect ratio for HDMI. Most retro systems have ratio 4:3.
-	output [11:0] VIDEO_ARX,
-	output [11:0] VIDEO_ARY,
+	//if VIDEO_ARX[12] or VIDEO_ARY[12] is set then [11:0] contains scaled size instead of aspect ratio.
+	output [12:0] VIDEO_ARX,
+	output [12:0] VIDEO_ARY,
 
 	output  [7:0] VGA_R,
 	output  [7:0] VGA_G,
@@ -49,6 +50,9 @@ module emu
 	output        VGA_F1,
 	output [1:0]  VGA_SL,
 	output        VGA_SCALER, // Force VGA scaler
+
+	input  [11:0] HDMI_WIDTH,
+	input  [11:0] HDMI_HEIGHT,
 
 `ifdef USE_FB
 	// Use framebuffer in DDRAM (USE_FB=1 in qsf)
@@ -181,11 +185,17 @@ assign BUTTONS   = 0;
 assign VGA_SCALER= 0;
 
 wire [1:0] ar = status[14:13];
-
-assign VIDEO_ARX = (!ar) ? 12'd4 : (ar - 1'd1);
-assign VIDEO_ARY = (!ar) ? 12'd3 : 12'd0;
-
-wire [1:0] scale = status[3:2];
+video_freak video_freak
+(
+	.*,
+	.VGA_DE_IN(VGA_DE),
+	.VGA_DE(),
+	.ARX((!ar) ? 12'd4 : (ar - 1'd1)),
+	.ARY((!ar) ? 12'd3 : 12'd0),
+	.CROP_SIZE(0),
+	.CROP_OFF(0),
+	.SCALE(status[16:15])
+);
 
 `include "build_id.v" 
 parameter CONF_STR = {
@@ -196,6 +206,8 @@ parameter CONF_STR = {
 	"-;",
 	"ODE,Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
 	"O23,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
+	"OFG,Scale,Normal,V-Integer,Narrower HV-Integer,Wider HV-Integer;",
+	"-;",
 	"OA,Mouse as Joystick,Yes,No;",
 	"OB,Swap Joysticks,No,Yes;",
 	"-;",
@@ -471,10 +483,10 @@ bbc_micro_core BBCMicro
 	.video_red(r),
 	.video_green(g),
 	.video_blue(b),
-	.video_vblank(vblank),
-	.video_hblank(hblank),
-	.video_vsync(vs),
-	.video_hsync(hs),
+	.video_vblank(VBlank),
+	.video_hblank(HBlank),
+	.video_vsync(VSync),
+	.video_hsync(HSync),
 
 	.audio_sn(audio_sn),
 
@@ -523,14 +535,14 @@ always @(posedge CLK_VIDEO) begin
 	reg vrate1, vrate2;
 	reg [2:0] div;
 	
-	old_vs <= vs;
-	if(old_vs & ~vs) begin
+	old_vs <= VSync;
+	if(old_vs & ~VSync) begin
 		rate <= 3'b100;
 		vrate2 <= vrate1;
 		vrate1 <= 0;
 	end
 	
-	if(~hblank & ~vblank & ce_vids) begin
+	if(~HBlank & ~VBlank & ce_vids) begin
 		if(rate[2]) rate <= ce_rate;
 		else if(rate[1:0] != ce_rate) vrate1 <= 1;
 	end
@@ -541,38 +553,22 @@ always @(posedge CLK_VIDEO) begin
 	ce_pix <= vrate2 ? !div : ce_vids;
 end
 
-wire hs, vs, hblank, vblank, clk_sel;
+wire [1:0] scale = status[3:2];
+
+wire HSync, VSync, HBlank, VBlank, clk_sel;
 wire r,g,b;
 
 assign CLK_VIDEO = clk_sys;
 video_mixer #(640, 1, 1) mixer
 (
-	.clk_vid(CLK_VIDEO),
-	.ce_pix(ce_pix),
-	.ce_pix_out(CE_PIXEL),
+	.*,
 
 	.hq2x(scale == 1),
-	.scanlines(0),
 	.scandoubler(scale || forced_scandoubler),
-	.gamma_bus(gamma_bus),
 
 	.R({4{r}}),
 	.G({4{g}}),
-	.B({4{b}}),
-
-	.mono(0),
-
-	.HSync(hs),
-	.VSync(vs),
-	.HBlank(hblank),
-	.VBlank(vblank),
-
-	.VGA_R(VGA_R),
-	.VGA_G(VGA_G),
-	.VGA_B(VGA_B),
-	.VGA_VS(VGA_VS),
-	.VGA_HS(VGA_HS),
-	.VGA_DE(VGA_DE)
+	.B({4{b}})
 );
 
 assign VGA_F1 = 0;
