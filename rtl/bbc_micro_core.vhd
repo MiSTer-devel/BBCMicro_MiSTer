@@ -65,6 +65,7 @@ entity bbc_micro_core is
 	port
 	(
 		-- Clocks
+		--clock_48       : in  std_logic;
 		clock_32       : in  std_logic;
 		clock_24       : in  std_logic;
 
@@ -148,12 +149,71 @@ entity bbc_micro_core is
 		ext_tube_phi2  : out std_logic;
 		ext_tube_a     : out std_logic_vector(6 downto 0);
 		ext_tube_di    : out std_logic_vector(7 downto 0);
-		ext_tube_do    : in  std_logic_vector(7 downto 0) := x"FE"
+		ext_tube_do    : in  std_logic_vector(7 downto 0) := x"FE";
+
+		-- FDC signals
+		img_mounted    : in   std_logic_vector(0 downto 0);
+		img_size       : in   std_logic_vector(31 downto 0);
+		img_ds         : in   std_logic;
+		sd_lba         : out  std_logic_vector(31 downto 0);
+		sd_rd          : out  std_logic_vector(0 downto 0);
+		sd_wr          : out  std_logic_vector(0 downto 0);
+		sd_ack         : in   std_logic;
+		sd_buff_addr   : in   std_logic_vector(8 downto 0);
+		sd_dout        : in   std_logic_vector(7 downto 0);
+		sd_din         : out  std_logic_vector(7 downto 0);
+		sd_dout_strobe : in   std_logic
+
+		
+		
 	);
 end entity;
 
 architecture rtl of bbc_micro_core is
 
+	 	component fdc1772 is
+		generic (
+			CLK_EN              : integer := 4000;  -- old values tried with different ram/success : 42666000 42800000 42680000 42856000
+			--			CLK_EN           : integer := 2033;
+			EXT_MOTOR : integer := 1  -- 256 bytes/sector
+		);
+		port (
+			clkcpu           : in  std_logic;
+			clk8m_en         : in  std_logic;
+
+			floppy_drive     : in  std_logic_vector( 3 downto 0);
+			floppy_side      : in  std_logic;
+			floppy_reset     : in  std_logic;
+			floppy_step      : out  std_logic;
+			floppy_motor     : in  std_logic;
+			floppy_ready     : out  std_logic;
+
+			irq              : out std_logic;
+			drq              : out std_logic;
+
+			cpu_addr         : in  std_logic_vector( 1 downto 0);
+			cpu_sel          : in  std_logic;
+			cpu_rw           : in  std_logic;
+			cpu_din          : in  std_logic_vector( 7 downto 0);
+			cpu_dout         : out std_logic_vector( 7 downto 0);
+
+			img_mounted      : in  std_logic_vector( 0 downto 0);
+			img_wp           : in  std_logic_vector( 0 downto 0);
+			img_ds           : in  std_logic;
+			img_size         : in  std_logic_vector(31 downto 0); -- in bytes
+
+			sd_lba           : out std_logic_vector(31 downto 0);
+			sd_rd            : out std_logic_vector( 0 downto 0);
+			sd_wr            : out std_logic_vector( 0 downto 0);
+--			sd_ack           : in  std_logic_vector( 1 downto 0);
+			sd_ack           : in  std_logic;
+			sd_buff_addr     : in  std_logic_vector( 8 downto 0);
+			sd_dout          : in  std_logic_vector( 7 downto 0);
+			sd_din           : out std_logic_vector( 7 downto 0);
+			sd_dout_strobe   : in  std_logic
+--			drive_led		  : out std_logic
+		);
+	end component ;
 -------------
 -- Signals
 -------------
@@ -182,6 +242,7 @@ signal ttxt_clken       : std_logic;
 
 -- CPU signals
 signal cpu_irq_n        : std_logic;
+signal cpu_nmi_n        : std_logic;
 signal cpu_r_nw         : std_logic;
 signal cpu_sync         : std_logic;
 signal cpu_a_t65        : std_logic_vector(23 downto 0);
@@ -321,6 +382,12 @@ signal mouse_via_enable : std_logic;      -- 0xFE60-FE7F
 --signal adlc_enable    : std_logic;      -- 0xFEA0-FEBF (Econet)
 signal tube_enable      : std_logic;      -- 0xFEE0-FEFF
 
+
+signal   fddc_enable: std_logic;
+signal   fdc_enable: std_logic;
+signal   fdcon_enable: std_logic;
+
+
 signal adc_enable       : std_logic;      -- 0xFEC0-FEDF
 signal adc_eoc_n        : std_logic;
 signal adc_do           : std_logic_vector(7 downto 0);
@@ -343,6 +410,17 @@ signal rtc_ce           : std_logic;
 signal rtc_r_nw         : std_logic;
 signal rtc_as           : std_logic;
 signal rtc_ds           : std_logic;
+
+-- FDC1770
+signal fdc_irq          : std_logic;
+signal fdc_drq          : std_logic;
+signal fdc_do           : std_logic_vector(7 downto 0);
+signal floppy_drive     : std_logic_vector(3 downto 0);
+signal floppy_side      : std_logic;
+signal floppy_density   : std_logic;
+signal floppy_motor     : std_logic;
+signal floppy_reset     : std_logic;
+
 
 -- 0xFE34 Access Control
 signal acccon           : std_logic_vector(7 downto 0);
@@ -374,7 +452,7 @@ begin
 			cpu_clken,
 			clock_32,
 			'1',
-			'1',
+			cpu_nmi_n,
 			cpu_irq_n,
 			'1',
 			'1',
@@ -898,6 +976,8 @@ begin
         sys_via_enable <= '0';
         user_via_enable <= '0';
         mouse_via_enable <= '0';
+		  fdc_enable<='0';
+		  fdcon_enable<='0';
  --     adlc_enable <= '0';
         adc_enable <= '0';
         tube_enable <= '0';
@@ -931,7 +1011,12 @@ begin
                     -- 0xFE20
                     if cpu_a(4) = '0' then
                         -- 0xFE20
-                        vidproc_enable <= '1';
+                        vidproc_enable <= '1'; -- does this need master off?
+								if (m128_mode = '1' and cpu_a(3)='1') then -- AJS
+									fdc_enable<='1';
+								elsif (m128_mode = '1' and cpu_a(3)='0' and cpu_a(2)='1') then -- AJS
+								   fdcon_enable<='1';
+								end if;
                     elsif m128_mode = '1' then
                         case cpu_a(3 downto 2) is
                             -- 0xFE30
@@ -1006,6 +1091,7 @@ begin
         ext_tube_do    when tube_enable = '1' and IncludeCoProExt else
         -- Master 128 additions
         romsel         when romsel_enable = '1' and m128_mode = '1' else
+        fdc_do         when fdc_enable = '1' else
         acccon         when acccon_enable = '1' and m128_mode = '1' else
         "11111110"     when io_sheila = '1' else
         "11111111"     when io_fred = '1' or io_jim = '1' else
@@ -1013,6 +1099,7 @@ begin
 
     cpu_irq_n <= not (sys_via_irq or user_via_irq or mouse_via_irq or acc_irr) when m128_mode = '1' else
                  not (sys_via_irq or user_via_irq or mouse_via_irq);
+	 cpu_nmi_n <= not fdc_irq and  not fdc_drq;
 
     -- Synchronous outputs to External Memory
 
@@ -1147,6 +1234,80 @@ begin
         end if;
     end process;
 
+	 -- FDC (Master)
+
+	fdc : fdc1772
+	port map
+	(
+		clkcpu  => clock_32, -- 48?
+		clk8m_en => mhz4_clken,
+
+		cpu_sel => fdc_enable,
+		cpu_rw => cpu_r_nw,
+		cpu_addr => cpu_a(1 downto 0),
+		cpu_dout => fdc_do,
+		cpu_din => cpu_do,
+
+		irq => fdc_irq,
+		drq => fdc_drq,
+
+
+
+
+
+
+		-- The following signals are all passed in from the Top module
+		img_mounted => img_mounted,
+		img_size => img_size,
+		img_wp => "0",
+		img_ds => img_ds,
+
+		sd_lba => sd_lba,
+		sd_rd => sd_rd,
+		sd_wr => sd_wr,
+		sd_ack => sd_ack,
+		sd_buff_addr => sd_buff_addr,
+		sd_dout => sd_dout,
+		sd_din => sd_din,
+		sd_dout_strobe => sd_dout_strobe,
+		
+		floppy_drive => floppy_drive,
+		floppy_motor => not floppy_motor,
+		floppy_side =>  floppy_side,
+		floppy_reset => floppy_reset
+		
+	);
+	 
+	 
+
+
+-- FDC Control Register (Master)
+    process(clock_32,reset_n)
+    begin
+        if reset_n = '0' then
+				floppy_drive <= "1111";
+				floppy_side <= '0';
+				floppy_reset <= '0';
+				floppy_density <= '0';
+				floppy_motor<='0';
+			elsif rising_edge(clock_32) then
+				if (cpu_clken) then
+					if (fdcon_enable ='1' and  cpu_r_nw='0') then
+						floppy_drive <= "111" & not cpu_do(0) ;
+						floppy_reset <= cpu_do(2);
+						floppy_side <= not cpu_do(4);
+						floppy_density <= cpu_do(5);
+					end if;
+				end if;
+        end if;
+    end process;
+
+
+
+
+
+	 
+	 
     -- Address translation logic for calculation of display address
     process(crtc_ma,crtc_ra,disp_addr_offs)
     variable aa : unsigned(3 downto 0);

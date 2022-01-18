@@ -33,5 +33,7 @@ set_global_assignment -name VHDL_FILE rtl/mc6845.vhd
 set_global_assignment -name VHDL_FILE rtl/vidproc.vhd
 set_global_assignment -name VHDL_FILE rtl/keyboard.vhd
 set_global_assignment -name VHDL_FILE rtl/bbc_micro_core.vhd -hdl_version VHDL_2008
+set_global_assignment -name VERILOG_FILE rtl/fdc1772/fdc1772.v
+set_global_assignment -name VERILOG_FILE rtl/fdc1772/floppy.v
 set_global_assignment -name SDC_FILE BBCMicro.sdc
 set_global_assignment -name SYSTEMVERILOG_FILE BBCMicro.sv

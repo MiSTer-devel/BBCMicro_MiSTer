@@ -121,6 +121,7 @@ architecture rtl of rtc is
         x"EB", -- CMOS  3 - Econet print server identity (lo)
         x"00", -- CMOS  4 - Econet print server identity (hi)
         x"C3", -- CMOS  5 - Default Filing System / Language (default file system MMFS)
+       -- x"C9", -- CMOS  5 - Default Filing System / Language (default file system MMFS)
         x"FF", -- CMOS  6 - ROM frugal bits (*INSERT/*UNPLUG)
         x"DD", -- CMOS  7 - ROM frugal bits (*INSERT/*UNPLUG) (disable ADFS)
         x"00", -- CMOS  8 - Edit startup settings
