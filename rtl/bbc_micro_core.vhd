@@ -1011,7 +1011,9 @@ begin
                     -- 0xFE20
                     if cpu_a(4) = '0' then
                         -- 0xFE20
-                        vidproc_enable <= '1'; -- does this need master off?
+								if (m128_mode = '0' or cpu_a(3 downto 2) = "00") then
+									vidproc_enable <= '1'; -- does this need master off?
+								end if;
 								if (m128_mode = '1' and cpu_a(3)='1') then -- AJS
 									fdc_enable<='1';
 								elsif (m128_mode = '1' and cpu_a(3)='0' and cpu_a(2)='1') then -- AJS
