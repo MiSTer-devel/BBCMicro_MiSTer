@@ -204,6 +204,7 @@ parameter CONF_STR = {
 	"-;",
 	"S0,VHD;",
 	"S1,SSDDSD;",
+	"S2,SSDDSD;",
 	"OC,Autostart,Yes,No;",
 	"-;",
 	"ODE,Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
@@ -268,22 +269,21 @@ wire [15:0] ioctl_dout;
 wire        forced_scandoubler;
 wire [21:0] gamma_bus;
 
-wire [31:0] sd_lba[2];
-wire [1:0]       sd_rd;
-wire [1:0]       sd_wr;
-wire [1:0]       sd_ack;
+wire [31:0] sd_lba[3];
+wire [2:0]       sd_rd;
+wire [2:0]       sd_wr;
+wire [2:0]       sd_ack;
 wire  [7:0] sd_buff_addr;
 wire [15:0] sd_buff_dout;
-wire [15:0] sd_buff_din[2];
+wire [15:0] sd_buff_din[3];
 wire        sd_buff_wr;
-wire  [1:0] img_mounted;
+wire  [2:0] img_mounted;
 wire        img_readonly;
 wire [63:0] img_size;
-wire        sd_ack_conf;
 
 wire [64:0] RTC;
 
-hps_io #(.CONF_STR(CONF_STR),.WIDE(1),.VDNUM(2)) hps_io
+hps_io #(.CONF_STR(CONF_STR),.WIDE(1),.VDNUM(3),.BLKSZ(2)) hps_io
 (
 	.clk_sys(clk_sys),
 	.HPS_BUS(HPS_BUS),
@@ -518,13 +518,13 @@ bbc_micro_core BBCMicro
 	.m128_mode(m128),
 	.copro_mode(|status[6:5]),
 	
-	.img_mounted    ( img_mounted[1] ),
+	.img_mounted    ( img_mounted[2:1] ),
 	.img_size       ( img_size       ),
 	.img_ds         ( img_ds         ),
 	.sd_lba         ( sd_lba[1]      ),
-	.sd_rd          ( sd_rd[1]       ),
-	.sd_wr          ( sd_wr[1]       ),
-	.sd_ack         ( sd_ack[1]      ),
+	.sd_rd          ( sd_rd[2:1]       ),
+	.sd_wr          ( sd_wr[2:1]       ),
+	.sd_ack         ( sd_ack[2:1]      ),
 	.sd_buff_addr   ( sd_buff_addr   ),
 	.sd_dout        ( sd_buff_dout   ),
 	.sd_din         ( sd_buff_din[1] ),
@@ -532,6 +532,11 @@ bbc_micro_core BBCMicro
 
 
 );
+
+// ajs hack for now
+assign sd_buff_din[2] = sd_buff_din[1];
+assign sd_lba[2]=sd_lba[1];
+
 wire img_ds = ioctl_index[7:6] == 1;
 
 wire [7:0] audio_sn;

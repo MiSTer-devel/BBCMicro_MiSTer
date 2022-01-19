@@ -152,12 +152,12 @@ entity bbc_micro_core is
 		ext_tube_do    : in  std_logic_vector(7 downto 0) := x"FE";
 
 		-- FDC signals
-		img_mounted    : in   std_logic_vector(0 downto 0);
+		img_mounted    : in   std_logic_vector(1 downto 0);
 		img_size       : in   std_logic_vector(31 downto 0);
 		img_ds         : in   std_logic;
 		sd_lba         : out  std_logic_vector(31 downto 0);
-		sd_rd          : out  std_logic_vector(0 downto 0);
-		sd_wr          : out  std_logic_vector(0 downto 0);
+		sd_rd          : out  std_logic_vector(1 downto 0);
+		sd_wr          : out  std_logic_vector(1 downto 0);
 		sd_ack         : in   std_logic;
 		sd_buff_addr   : in   std_logic_vector(8 downto 0);
 		sd_dout        : in   std_logic_vector(7 downto 0);
@@ -197,14 +197,14 @@ architecture rtl of bbc_micro_core is
 			cpu_din          : in  std_logic_vector( 7 downto 0);
 			cpu_dout         : out std_logic_vector( 7 downto 0);
 
-			img_mounted      : in  std_logic_vector( 0 downto 0);
-			img_wp           : in  std_logic_vector( 0 downto 0);
+			img_mounted      : in  std_logic_vector( 1 downto 0);
+			img_wp           : in  std_logic_vector( 1 downto 0);
 			img_ds           : in  std_logic;
 			img_size         : in  std_logic_vector(31 downto 0); -- in bytes
 
 			sd_lba           : out std_logic_vector(31 downto 0);
-			sd_rd            : out std_logic_vector( 0 downto 0);
-			sd_wr            : out std_logic_vector( 0 downto 0);
+			sd_rd            : out std_logic_vector( 1 downto 0);
+			sd_wr            : out std_logic_vector( 1 downto 0);
 --			sd_ack           : in  std_logic_vector( 1 downto 0);
 			sd_ack           : in  std_logic;
 			sd_buff_addr     : in  std_logic_vector( 8 downto 0);
@@ -1261,7 +1261,7 @@ begin
 		-- The following signals are all passed in from the Top module
 		img_mounted => img_mounted,
 		img_size => img_size,
-		img_wp => "0",
+		img_wp => "00",
 		img_ds => img_ds,
 
 		sd_lba => sd_lba,

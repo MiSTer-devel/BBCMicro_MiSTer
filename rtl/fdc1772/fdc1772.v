@@ -60,7 +60,7 @@ module fdc1772 (
 
 
 parameter CLK_EN           = 16'd4000; // in kHz
-parameter FD_NUM           = 1;    // number of supported floppies
+parameter FD_NUM           = 2;    // number of supported floppies
 parameter MODEL            = 2;    // 0 - wd1770, 1 - fd1771, 2 - wd1772, 3 = wd1773/fd1793
 parameter EXT_MOTOR        = 1'b1; // != 0 if motor is controlled externally by floppy_motor
 parameter INVERT_HEAD_RA   = 1'b1; // != 0 - invert head in READ_ADDRESS reply
