@@ -264,7 +264,7 @@ wire        ioctl_download;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
-wire [15:0] ioctl_dout;
+wire [7:0] ioctl_dout;
 wire        forced_scandoubler;
 wire [21:0] gamma_bus;
 
@@ -273,8 +273,8 @@ wire [2:0]       sd_rd;
 wire [2:0]       sd_wr;
 wire [2:0]       sd_ack;
 wire  [12:0] sd_buff_addr;
-wire [15:0] sd_buff_dout;
-wire [15:0] sd_buff_din[3];
+wire [7:0] sd_buff_dout;
+wire [7:0] sd_buff_din[3];
 wire        sd_buff_wr;
 wire  [2:0] img_mounted;
 wire        img_readonly;
@@ -339,7 +339,7 @@ reg  [15:0] rom_dout;
 reg   [7:0] rom_data;
 
 (* ram_init_file = "roms/rom.mif" *) reg [15:0] rom[114688];
-always @(posedge clk_sys) if(!ioctl_index && ioctl_wr && reset) rom[reset ? ioctl_addr[17:1] : rom_addr[17:1]] <= {ioctl_dout[7:0], ioctl_dout[15:8]};
+//always @(posedge clk_sys) if(!ioctl_index && ioctl_wr && reset) rom[reset ? ioctl_addr[17:1] : rom_addr[17:1]] <= {ioctl_dout[7:0], ioctl_dout[15:8]};
 always @(posedge clk_sys) rom_dout <= rom[rom_addr[17:1]];
 
 
@@ -604,7 +604,7 @@ reg vsd_sel = 0;
 always @(posedge clk_sys) if(img_mounted[0]) vsd_sel <= |img_size;
 
 wire vsdmiso;
-sd_card #(1) sd_card
+sd_card #(.WIDE(0)) sd_card
 (
 	.*,
 

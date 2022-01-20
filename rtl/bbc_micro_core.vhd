@@ -1295,7 +1295,7 @@ begin
 			elsif rising_edge(clock_32) then
 				if (cpu_clken) then
 					if (fdcon_enable ='1' and  cpu_r_nw='0') then
-						floppy_drive <= '1' & not cpu_do(0) ;
+						floppy_drive <= cpu_do(0) & not cpu_do(0) ;
 						floppy_reset <= cpu_do(2);
 						floppy_side <= not cpu_do(4);
 						floppy_density <= cpu_do(5);
