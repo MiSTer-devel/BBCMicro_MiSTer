@@ -466,6 +466,7 @@ wire       ce_vid;
 
 bbc_micro_core BBCMicro
 (
+   .clksys(clk_sys),
 	.clock_32(clk_32),
 	.clock_24(clk_24),
 

@@ -66,6 +66,7 @@ entity bbc_micro_core is
 	(
 		-- Clocks
 		--clock_48       : in  std_logic;
+		clksys       : in  std_logic;
 		clock_32       : in  std_logic;
 		clock_24       : in  std_logic;
 
@@ -158,7 +159,7 @@ entity bbc_micro_core is
 		sd_lba         : out  std_logic_vector(31 downto 0);
 		sd_rd          : out  std_logic_vector(1 downto 0);
 		sd_wr          : out  std_logic_vector(1 downto 0);
-		sd_ack         : in   std_logic;
+		sd_ack         : in   std_logic_vector(1 downto 0);
 		sd_buff_addr   : in   std_logic_vector(8 downto 0);
 		sd_dout        : in   std_logic_vector(7 downto 0);
 		sd_din         : out  std_logic_vector(7 downto 0);
@@ -178,6 +179,7 @@ architecture rtl of bbc_micro_core is
 			EXT_MOTOR : integer := 1  -- 256 bytes/sector
 		);
 		port (
+			clksys           : in  std_logic;
 			clkcpu           : in  std_logic;
 			clk8m_en         : in  std_logic;
 
@@ -1241,6 +1243,7 @@ begin
 	fdc : fdc1772
 	port map
 	(
+	   clksys => clksys,
 		clkcpu  => clock_32, -- 48?
 		clk8m_en => mhz4_clken,
 
@@ -1267,7 +1270,7 @@ begin
 		sd_lba => sd_lba,
 		sd_rd => sd_rd,
 		sd_wr => sd_wr,
-		sd_ack => sd_ack,
+		sd_ack => sd_ack(0) or sd_ack(1),
 		sd_buff_addr => sd_buff_addr,
 		sd_dout => sd_dout,
 		sd_din => sd_din,
@@ -1281,6 +1284,17 @@ begin
 	);
 	 
 	 
+-- From MAME:
+--   Master drive control:
+--        Bit       Meaning
+--        -----------------
+--        7,6       Not used.
+--         5        Double density select (0 = double, 1 = single).
+--         4        Side select (0 = side 0, 1 = side 1).
+--         3        Drive select 2.
+--         2        Reset drive controller chip. (0 = reset controller, 1 = no reset)
+--         1        Drive select 1.
+--         0        Drive select 0.
 
 
 -- FDC Control Register (Master)
@@ -1292,13 +1306,16 @@ begin
 				floppy_reset <= '0';
 				floppy_density <= '0';
 				floppy_motor<='0';
-			elsif rising_edge(clock_32) then
+
+				elsif rising_edge(clock_32) then
 				if (cpu_clken) then
+--    fe24-fe27  FDC Latch      1770 Control latch
 					if (fdcon_enable ='1' and  cpu_r_nw='0') then
-						floppy_drive <= cpu_do(0) & not cpu_do(0) ;
+						floppy_drive <= not cpu_do(1) & not cpu_do(0) ;
 						floppy_reset <= cpu_do(2);
 						floppy_side <= not cpu_do(4);
 						floppy_density <= cpu_do(5);
+						floppy_motor <= '0';
 					end if;
 				end if;
         end if;

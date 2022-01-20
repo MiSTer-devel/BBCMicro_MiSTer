@@ -22,6 +22,7 @@
 // - implement sector size 0
 
 module fdc1772 (
+   input            clksys,
 	input            clkcpu, // system cpu clock.
 	input            clk8m_en,
 
@@ -728,12 +729,13 @@ end
 
 fdc1772_dpram #(8, 10) fifo
 (
-	.clock(clkcpu),
+	.clocka(clksys),
 
 	.address_a(fifo_sdptr),
 	.data_a(sd_dout),
 	.wren_a(sd_dout_strobe & sd_ack),
 	.q_a(sd_din),
+	.clockb(clkcpu),
 
 	.address_b(fifo_cpuptr_adj),
 	.data_b(data_in),
@@ -1042,8 +1044,9 @@ endmodule
 
 module fdc1772_dpram #(parameter DATAWIDTH=8, ADDRWIDTH=9)
 (
-	input                   clock,
-
+	input                   clocka,
+   input                   clockb,
+	
 	input   [ADDRWIDTH-1:0] address_a,
 	input   [DATAWIDTH-1:0] data_a,
 	input                   wren_a,
@@ -1057,7 +1060,7 @@ module fdc1772_dpram #(parameter DATAWIDTH=8, ADDRWIDTH=9)
 
 reg [DATAWIDTH-1:0] ram[0:(1<<ADDRWIDTH)-1];
 
-always @(posedge clock) begin
+always @(posedge clocka) begin
 	if(wren_a) begin
 		ram[address_a] <= data_a;
 		q_a <= data_a;
@@ -1066,7 +1069,7 @@ always @(posedge clock) begin
 	end
 end
 
-always @(posedge clock) begin
+always @(posedge clockb) begin
 	if(wren_b) begin
 		ram[address_b] <= data_b;
 		q_b <= data_b;
