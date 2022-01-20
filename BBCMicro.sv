@@ -331,7 +331,8 @@ reg m128 = 0;
 always @(posedge clk_sys) if(reset_req) m128 <= status[4];
 
 wire        mem_we_n;
-wire [18:0] mem_addr;
+reg [18:0] mem_addr;
+wire [18:0] mem_addr_w;
 wire  [7:0] mem_din;
 
 reg  [17:0] rom_addr;
@@ -521,22 +522,39 @@ bbc_micro_core BBCMicro
 	.img_mounted    ( img_mounted[2:1] ),
 	.img_size       ( img_size       ),
 	.img_ds         ( img_ds         ),
-	.sd_lba         ( sd_lba[1]      ),
+	.sd_lba         ( fd_sd_lba      ),
 	.sd_rd          ( sd_rd[2:1]       ),
 	.sd_wr          ( sd_wr[2:1]       ),
 	.sd_ack         ( sd_ack[2:1]      ),
 	.sd_buff_addr   ( sd_buff_addr[8:0]   ),
 	.sd_dout        ( sd_buff_dout   ),
-	.sd_din         ( sd_buff_din[1] ),
+	.sd_din         ( fd_sd_buff_din ),
 	.sd_dout_strobe ( sd_buff_wr )
 
 
 );
 
-// ajs hack for now
-assign sd_buff_din[2] = sd_buff_din[1];
-assign sd_lba[2]=sd_lba[1];
 
+wire [31:0] fd_sd_lba;
+wire [7:0] fd_sd_buff_din;
+//always @(posedge clk_32) 	mem_addr<=mem_addr_w;
+
+
+always @(posedge clk_32/*clk_sys*/)
+begin
+	// ajs hack for now
+	sd_buff_din[1] <= fd_sd_buff_din;
+	sd_lba[1]      <=  fd_sd_lba;
+	sd_buff_din[2] <= fd_sd_buff_din;
+	sd_lba[2]      <=fd_sd_lba;
+	
+end
+
+// ajs hack for now
+//assign sd_buff_din[2] = sd_buff_din[1];
+//assign sd_lba[2]=sd_lba[1];
+
+// this isn't correct:
 wire img_ds = ioctl_index[7:6] == 1;
 
 wire [7:0] audio_sn;
