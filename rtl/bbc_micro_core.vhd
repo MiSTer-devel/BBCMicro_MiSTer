@@ -181,7 +181,7 @@ architecture rtl of bbc_micro_core is
 			clkcpu           : in  std_logic;
 			clk8m_en         : in  std_logic;
 
-			floppy_drive     : in  std_logic_vector( 3 downto 0);
+			floppy_drive     : in  std_logic_vector( 1 downto 0);
 			floppy_side      : in  std_logic;
 			floppy_reset     : in  std_logic;
 			floppy_step      : out  std_logic;
@@ -415,7 +415,7 @@ signal rtc_ds           : std_logic;
 signal fdc_irq          : std_logic;
 signal fdc_drq          : std_logic;
 signal fdc_do           : std_logic_vector(7 downto 0);
-signal floppy_drive     : std_logic_vector(3 downto 0);
+signal floppy_drive     : std_logic_vector(1 downto 0);
 signal floppy_side      : std_logic;
 signal floppy_density   : std_logic;
 signal floppy_motor     : std_logic;
@@ -447,27 +447,27 @@ begin
     -------------------------
 	  cpuT65 : entity work.T65
 	  port map (
-			"00",
-			not m128_mode and reset_n,
-			cpu_clken,
-			clock_32,
-			'1',
-			cpu_nmi_n,
-			cpu_irq_n,
-			'1',
-			'1',
-			cpu_r_nw_t65,
-			cpu_sync_t65,
-			open,
-			open,
-			open,
-			open,
-			open,
-			open,
-			open,
-			cpu_a_t65,
-			cpu_di,
-			cpu_do_t65
+			Mode =>"00",
+			Res_n =>not m128_mode and reset_n,
+			Enable => cpu_clken,
+			Clk => clock_32,
+			Rdy=> '1',
+			Abort_n => '1',
+			IRQ_n => cpu_irq_n,
+			NMI_n => cpu_nmi_n,
+			SO_n => '1',
+			R_W_n => cpu_r_nw_t65,
+			Sync => cpu_sync_t65,
+			EF => open,
+			MF => open,
+			XF => open,
+			ML_n => open,
+			VP_n => open,
+			VDA => open,
+			VPA => open,
+			A => cpu_a_t65,
+			DI=> cpu_di,
+			DO=> cpu_do_t65
 	  );
 
 	  cpuC02 : entity work.r65c02
@@ -475,7 +475,7 @@ begin
 			reset    => m128_mode and reset_n,
 			clk      => clock_32,
 			enable   => cpu_clken,
-			nmi_n    => '1',
+			nmi_n    => cpu_nmi_n,
 			irq_n    => cpu_irq_n,
 			di       => unsigned(cpu_di),
 			do       => cpu_dout_us,
@@ -1287,7 +1287,7 @@ begin
     process(clock_32,reset_n)
     begin
         if reset_n = '0' then
-				floppy_drive <= "1111";
+				floppy_drive <= "11";
 				floppy_side <= '0';
 				floppy_reset <= '0';
 				floppy_density <= '0';
@@ -1295,7 +1295,7 @@ begin
 			elsif rising_edge(clock_32) then
 				if (cpu_clken) then
 					if (fdcon_enable ='1' and  cpu_r_nw='0') then
-						floppy_drive <= "111" & not cpu_do(0) ;
+						floppy_drive <= '1' & not cpu_do(0) ;
 						floppy_reset <= cpu_do(2);
 						floppy_side <= not cpu_do(4);
 						floppy_density <= cpu_do(5);

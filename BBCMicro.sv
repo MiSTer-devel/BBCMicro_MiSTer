@@ -171,7 +171,6 @@ module emu
 	input         OSD_STATUS
 );
 
-
 assign ADC_BUS  = 'Z;
 assign USER_OUT = '1;
 assign {UART_RTS, UART_TXD, UART_DTR} = 0;
@@ -273,7 +272,7 @@ wire [31:0] sd_lba[3];
 wire [2:0]       sd_rd;
 wire [2:0]       sd_wr;
 wire [2:0]       sd_ack;
-wire  [7:0] sd_buff_addr;
+wire  [12:0] sd_buff_addr;
 wire [15:0] sd_buff_dout;
 wire [15:0] sd_buff_din[3];
 wire        sd_buff_wr;
@@ -283,7 +282,7 @@ wire [63:0] img_size;
 
 wire [64:0] RTC;
 
-hps_io #(.CONF_STR(CONF_STR),.WIDE(1),.VDNUM(3),.BLKSZ(2)) hps_io
+hps_io #(.CONF_STR(CONF_STR),/*.WIDE(1),*/.VDNUM(3),.BLKSZ(2)) hps_io
 (
 	.clk_sys(clk_sys),
 	.HPS_BUS(HPS_BUS),
@@ -525,7 +524,7 @@ bbc_micro_core BBCMicro
 	.sd_rd          ( sd_rd[2:1]       ),
 	.sd_wr          ( sd_wr[2:1]       ),
 	.sd_ack         ( sd_ack[2:1]      ),
-	.sd_buff_addr   ( sd_buff_addr   ),
+	.sd_buff_addr   ( sd_buff_addr[8:0]   ),
 	.sd_dout        ( sd_buff_dout   ),
 	.sd_din         ( sd_buff_din[1] ),
 	.sd_dout_strobe ( sd_buff_wr )
@@ -610,7 +609,7 @@ sd_card #(1) sd_card
 	.*,
 
 	.img_mounted(img_mounted[0]),
-	
+	.sd_buff_addr(sd_buff_addr[8:0]),
 	.sd_rd(sd_rd[0]),
 	.sd_wr(sd_wr[0]),
 	.sd_ack(sd_ack[0]),
