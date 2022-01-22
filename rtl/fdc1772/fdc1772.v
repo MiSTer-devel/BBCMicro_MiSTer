@@ -752,7 +752,7 @@ reg [1:0] sd_state;
 reg       sd_card_write;
 reg       sd_card_read;
 
-always @(posedge clkcpu) begin
+always @(posedge clksys) begin
 	reg sd_ackD;
 	reg sd_card_readD;
 	reg sd_card_writeD;
