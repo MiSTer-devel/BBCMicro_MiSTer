@@ -1,0 +1,22 @@
+{
+	"system" : {
+		"platform" : "windows64",
+		"os_name" : "Windows 10",
+		"os_version" : "10.0"
+	},
+	"error" : {
+		"executable" : "quartus_fit",
+		"comment" : "none",
+		"error_message" : "Access Violation at 0X00007FF84C00E2F1",
+		"source_file" : "unknown",
+		"line" : "0",
+		"stack_trace" : "\t0x7ff84c00e2f0: tsm_sta + 0x2ce2f0 (?sta_find_duplicates_of_deleted_net_name@@YAXPEBDAEAVSTA_COLLECTION_BUILDER@@W4STA_COLLECTION_TYPE@@AEAV?$vector@PEAVTDB_NODE@@V?$allocator@PEAVTDB_NODE@@@std@@@std@@AEAV?$vector@HV?$allocator@H@std@@@4@PEAVTHR_MUTEX_OBJ@@@Z + 0xe0)\n\t0x7ff84bdd33ea: tsm_sta + 0x933ea (?add_keeper_to_vector_if_wildcard_matches@@YAXAEAVSTA_COLLECTION_BUILDER@@W4STA_COLLECTION_TYPE@@AEAVQTL_STR_MATCH_PATTERN@@AEAVQTL_STR_MATCH_STRING@@HAEAV?$vector@PEAVTDB_NODE@@V?$allocator@PEAVTDB_NODE@@@std@@@std@@AEAV?$vector@HV?$allocator@H@std@@@6@PEAVTHR_MUTEX_OBJ@@@Z + 0xae)\n\t0x7ff84bdd3552: tsm_sta + 0x93552 (?do_parallel_work@STA_CBUILD_KEEPER_TASK@@UEAAXXZ + 0x132)\n\t0x7ff8a3924505: ccl_put + 0x4505 (?thread_loop@PUT_SPMD_JOB_VOID_PTR_IMPL@@IEAAX_N@Z + 0x145)\n\t0x7ff8a39243a8: ccl_put + 0x43a8 (?thread_fn@PUT_SPMD_JOB_VOID_PTR_IMPL@@KAPEAXPEAX@Z + 0x38)\n\t0x7ff8aaa1454e: CCL_MSG + 0x1454e (?msg_thread_wrapper@@YAPEAXP6APEAXPEAX@Z0@Z + 0x6e)\n\t0x7ff8aa9e5b00: ccl_mem + 0x15b00 (?mem_thread_wrapper@@YAPEAXP6APEAXPEAX@Z0@Z + 0x70)\n\t0x7ff8aa5f2791: ccl_thr + 0x2791 (thr_thread_begin + 0xa1)\n\t0x7ff8b8157033: KERNEL32 + 0x17033 (BaseThreadInitThunk + 0x13)\n\t0x7ff8b8fc2650: ntdll + 0x52650 (RtlUserThreadStart + 0x20)\n",
+		"subsystem" : "unknown"
+	},
+	"quartus" : {
+		"quartus_bits" : "64",
+		"version" : "17.0.2",
+		"build" : "602",
+		"edition" : "Lite Edition"
+	}
+}

@@ -170,7 +170,7 @@ architecture rtl of rtc is
 
 
     type RTC_STATE_TYPE is (
-        INIT, WRITE_10, WRITE_16, RUNNING
+        INIT, WRITE_5, WRITE_10, WRITE_16, RUNNING
     );
 
     signal rtc_state : RTC_STATE_TYPE := INIT;
@@ -230,6 +230,11 @@ begin
                         as_r <= '0';
                         ds_r <= '0';
                         do <= (others => '0');
+                        rtc_state <= WRITE_5;
+
+						  -- Copy the file mode from the DIP switches into CMOS on power up
+                    when WRITE_5 =>
+                        if (keyb_dip(4) ='1') then rtc_ram(19) <= x"C3"; else rtc_ram(19) <=  x"C9"; end if;
                         rtc_state <= WRITE_10;
 
                     -- Copy the screen mode from the DIP switches into CMOS on power up

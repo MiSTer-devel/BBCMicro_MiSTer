@@ -155,7 +155,6 @@ entity bbc_micro_core is
 		-- FDC signals
 		img_mounted    : in   std_logic_vector(1 downto 0);
 		img_size       : in   std_logic_vector(31 downto 0);
-		img_ds         : in   std_logic;
 		sd_lba         : out  std_logic_vector(31 downto 0);
 		sd_rd          : out  std_logic_vector(1 downto 0);
 		sd_wr          : out  std_logic_vector(1 downto 0);
@@ -201,7 +200,6 @@ architecture rtl of bbc_micro_core is
 
 			img_mounted      : in  std_logic_vector( 1 downto 0);
 			img_wp           : in  std_logic_vector( 1 downto 0);
-			img_ds           : in  std_logic;
 			img_size         : in  std_logic_vector(31 downto 0); -- in bytes
 
 			sd_lba           : out std_logic_vector(31 downto 0);
@@ -419,7 +417,7 @@ signal fdc_drq          : std_logic;
 signal fdc_do           : std_logic_vector(7 downto 0);
 signal floppy_drive     : std_logic_vector(1 downto 0);
 signal floppy_side      : std_logic;
-signal floppy_density   : std_logic;
+--signal floppy_density   : std_logic;
 signal floppy_motor     : std_logic;
 signal floppy_reset     : std_logic;
 
@@ -1265,7 +1263,6 @@ begin
 		img_mounted => img_mounted,
 		img_size => img_size,
 		img_wp => "00",
-		img_ds => img_ds,
 
 		sd_lba => sd_lba,
 		sd_rd => sd_rd,
@@ -1304,7 +1301,7 @@ begin
 				floppy_drive <= "11";
 				floppy_side <= '0';
 				floppy_reset <= '0';
-				floppy_density <= '0';
+			--	floppy_density <= '0';
 				floppy_motor<='0';
 
 				elsif rising_edge(clock_32) then
@@ -1314,7 +1311,7 @@ begin
 						floppy_drive <= not cpu_do(1) & not cpu_do(0) ;
 						floppy_reset <= cpu_do(2);
 						floppy_side <= not cpu_do(4);
-						floppy_density <= cpu_do(5);
+					--	floppy_density <= cpu_do(5);
 						floppy_motor <= '0';
 					end if;
 				end if;

@@ -47,7 +47,6 @@ module fdc1772 (
 	// place any signals that need to be passed up to the top after here.
 	input      [W:0] img_mounted, // signaling that new image has been mounted
 	input      [W:0] img_wp,      // write protect
-	input            img_ds,      // double-sided image (for BBC Micro only)
 	input     [31:0] img_size,    // size of image in bytes
 	output reg[31:0] sd_lba,
 	output reg [W:0] sd_rd,
@@ -163,8 +162,8 @@ always @(*) begin
 
 		image_fm = 1;
 		image_sectors = img_size[19:8];
-		image_doubleside = img_ds;
-		if (img_ds)
+		image_doubleside = img_size > 20'd409500; //409600 -- is double sided 
+		if (image_doubleside)
 			image_sps = image_sectors >> 1'b1;
 		else
 			image_sps = image_sectors;

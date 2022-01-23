@@ -205,6 +205,7 @@ parameter CONF_STR = {
 	"S1,SSDDSD;",
 	"S2,SSDDSD;",
 	"OC,Autostart,Yes,No;",
+	"OH,Dflt Boot,MMC (vhd),Floppy (SSD/DSD);",
 	"-;",
 	"ODE,Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
 	"O23,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
@@ -282,7 +283,7 @@ wire [63:0] img_size;
 
 wire [64:0] RTC;
 
-hps_io #(.CONF_STR(CONF_STR),/*.WIDE(1),*/.VDNUM(3),.BLKSZ(2)) hps_io
+hps_io #(.CONF_STR(CONF_STR),.VDNUM(3),.BLKSZ(2)) hps_io
 (
 	.clk_sys(clk_sys),
 	.HPS_BUS(HPS_BUS),
@@ -336,12 +337,12 @@ wire [18:0] mem_addr_w;
 wire  [7:0] mem_din;
 
 reg  [17:0] rom_addr;
-reg  [15:0] rom_dout;
+reg   [7:0] rom_dout;
 reg   [7:0] rom_data;
 
-(* ram_init_file = "roms/rom.mif" *) reg [15:0] rom[114688];
-//always @(posedge clk_sys) if(!ioctl_index && ioctl_wr && reset) rom[reset ? ioctl_addr[17:1] : rom_addr[17:1]] <= {ioctl_dout[7:0], ioctl_dout[15:8]};
-always @(posedge clk_sys) rom_dout <= rom[rom_addr[17:1]];
+(* ram_init_file = "roms/rom.mif" *) reg [7:0] rom[229376];
+always @(posedge clk_sys) if(!ioctl_index && ioctl_wr && reset) rom[reset ? ioctl_addr[17:0] : rom_addr[17:0]] <= ioctl_dout;
+always @(posedge clk_sys) rom_dout <= rom[rom_addr[17:0]];
 
 
 // Beeb ROM Images
@@ -418,7 +419,7 @@ always_comb begin
 		'b1_11_00,
 		'b1_11_01,
 		'b1_11_10,
-		'b1_11_11: rom_data = rom_addr[0] ? rom_dout[7:0] : rom_dout[15:8];
+		'b1_11_11: rom_data = rom_dout;
 		  default: rom_data = 0;
 	endcase
 end
@@ -506,7 +507,7 @@ bbc_micro_core BBCMicro
 	
 	.RTC(RTC),
 
-	.keyb_dip({4'd0, ~status[12], ~status[9:7]}),
+	.keyb_dip({3'd0, ~status[17], ~status[12], ~status[9:7]}),
 
 	.joystick1_x(    status[11] ? {joyb_x,joyb_x[7:4]} : {joya_x,joya_x[7:4]}),
 	.joystick1_y(    status[11] ? {joyb_y,joyb_y[7:4]} : {joya_y,joya_y[7:4]}),
@@ -521,7 +522,6 @@ bbc_micro_core BBCMicro
 	
 	.img_mounted    ( img_mounted[2:1] ),
 	.img_size       ( img_size       ),
-	.img_ds         ( img_ds         ),
 	.sd_lba         ( fd_sd_lba      ),
 	.sd_rd          ( sd_rd[2:1]       ),
 	.sd_wr          ( sd_wr[2:1]       ),
@@ -537,7 +537,6 @@ bbc_micro_core BBCMicro
 
 wire [31:0] fd_sd_lba;
 wire [7:0] fd_sd_buff_din;
-//always @(posedge clk_32) 	mem_addr<=mem_addr_w;
 
 
 always @(posedge clk_32/*clk_sys*/)
@@ -549,13 +548,6 @@ begin
 	sd_lba[2]      <=fd_sd_lba;
 	
 end
-
-// ajs hack for now
-//assign sd_buff_din[2] = sd_buff_din[1];
-//assign sd_lba[2]=sd_lba[1];
-
-// this isn't correct:
-wire img_ds = ioctl_index[7:6] == 1;
 
 wire [7:0] audio_sn;
 
