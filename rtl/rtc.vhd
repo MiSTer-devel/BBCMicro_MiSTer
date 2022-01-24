@@ -121,8 +121,9 @@ architecture rtl of rtc is
         x"EB", -- CMOS  3 - Econet print server identity (lo)
         x"00", -- CMOS  4 - Econet print server identity (hi)
         x"C3", -- CMOS  5 - Default Filing System / Language (default file system MMFS)
+       -- x"C9", -- CMOS  5 - Default Filing System / Language (default file system MMFS)
         x"FF", -- CMOS  6 - ROM frugal bits (*INSERT/*UNPLUG)
-        x"DD", -- CMOS  7 - ROM frugal bits (*INSERT/*UNPLUG) (disable ADFS)
+        x"FF", -- CMOS  7 - ROM frugal bits (*INSERT/*UNPLUG) (disable ADFS)
         x"00", -- CMOS  8 - Edit startup settings
         x"00", -- CMOS  9 - reserved for telecommunications applications
         ini10, -- CMOS 10 - VDU mode and *TV settings
@@ -130,7 +131,7 @@ architecture rtl of rtc is
         x"20", -- CMOS 12 - Keyboard auto-repeat delay
         x"08", -- CMOS 13 - Keyboard auto-repeat rate
         x"0A", -- CMOS 14 - Printer ignore character
-        x"2D", -- CMOS 15 - Default printer type, serial baud rate, ignore status and TUBE select
+        x"2C", -- CMOS 15 - Default printer type, serial baud rate, ignore status and TUBE select
         ini16, -- CMOS 16 - Default serial data format, auto boot option, int/ext TUBE, bell amplitude
         x"00", -- CMOS 17 - reserved for ANFS
         x"00", -- CMOS 18 - reserved for ANFS
@@ -169,7 +170,7 @@ architecture rtl of rtc is
 
 
     type RTC_STATE_TYPE is (
-        INIT, WRITE_10, WRITE_16, RUNNING
+        INIT, WRITE_5, WRITE_10, WRITE_16, RUNNING
     );
 
     signal rtc_state : RTC_STATE_TYPE := INIT;
@@ -229,6 +230,11 @@ begin
                         as_r <= '0';
                         ds_r <= '0';
                         do <= (others => '0');
+                        rtc_state <= WRITE_5;
+
+						  -- Copy the file mode from the DIP switches into CMOS on power up
+                    when WRITE_5 =>
+                        if (keyb_dip(4) ='1') then rtc_ram(19) <= x"C3"; else rtc_ram(19) <=  x"C9"; end if;
                         rtc_state <= WRITE_10;
 
                     -- Copy the screen mode from the DIP switches into CMOS on power up

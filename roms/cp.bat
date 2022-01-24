@@ -58,6 +58,7 @@ rem cat m128/adfs.rom              >> $IMAGE
 rem cat m128/view.rom              >> $IMAGE
 rem cat m128/terminal.rom          >> $IMAGE
 
-copy /b bbcb\os12.rom +bbcb\swmmfs2.rom +bbcb\ram_master_v6.rom +bbcb\basic2.rom +m128\adfs1-57.rom +m128\mammfs2.rom +m128\mos.rom +m128\dfs.rom +m128\viewsht.rom +m128\edit.rom +m128\basic4.rom +m128\adfs.rom +m128\view.rom +m128\terminal.rom rom.bin
-srec rom.bin -binary -o rom.mif -mif
+copy /b bbcb\os12.rom +bbcb\swmmfs2.rom +bbcb\ram_master_v6.rom +bbcb\basic2.rom +m128\adfs1-57.rom +m128\mammfs2.rom +m128\mos.rom +m128\dfs.rom  +m128\viewsht.rom +m128\edit.rom +m128\basic4.rom +m128\adfs.rom +m128\view.rom +m128\terminal.rom rom.bin
+rem copy /b bbcb\os12.rom +bbcb\swmmfs2.rom +bbcb\ram_master_v6.rom +bbcb\basic2.rom +m128\adfs1-57.rom +m128\mammfs2.rom +m128\mos.rom +m128\dfs0.9.rom +m128\dfs0.9.rom  +m128\viewsht.rom +m128\edit.rom +m128\basic4.rom +m128\adfs.rom +m128\view.rom +m128\terminal.rom rom.bin
+srec rom.bin -binary -o rom.mif -mif 8
 pause
