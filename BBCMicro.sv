@@ -202,10 +202,10 @@ parameter CONF_STR = {
 	"BBCMicro;;",
 	"-;",
 	"S0,VHD;",
-	"S1,SSDDSD;",
-	"S2,SSDDSD;",
+	"H0S1,SSDDSD;",
+	"H0S2,SSDDSD;",
 	"OC,Autostart,Yes,No;",
-	"OH,Dflt Boot,MMC (vhd),Floppy (SSD/DSD);",
+	"H0OH,Dflt Boot,MMC (vhd),Floppy (SSD/DSD);",
 	"-;",
 	"ODE,Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
 	"O23,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
@@ -290,6 +290,7 @@ hps_io #(.CONF_STR(CONF_STR),.VDNUM(3),.BLKSZ(2)) hps_io
 
 	.buttons(buttons),
 	.status(status),
+	.status_menumask(~status[4]),
 	.forced_scandoubler(forced_scandoubler),
 	.gamma_bus(gamma_bus),
 
