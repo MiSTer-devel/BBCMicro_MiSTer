@@ -94,7 +94,7 @@ entity bbc_micro_core is
 		video_hsync    : out std_logic;
 
 		-- Audio
-		audio_sn       : out std_logic_vector (7 downto 0);
+		audio_sn       : out unsigned (13 downto 0);
 
 		-- External memory (e.g. SRAM and/or FLASH)
 		-- 512KB logical address space
@@ -801,17 +801,20 @@ begin
 -- SN76489 Sound Generator
 --------------------------------------------------------
 
-		sound: work.sn76489_top
-		port map (
-			clock_i => clock_32,
-			clock_en_i => mhz4_clken,
-			res_n_i => not reset,
-			ce_n_i => '0',
-			we_n_i => sound_enable_n,
-			ready_o => open,
-			d_i => sys_via_pa_out,
-			aout_o => audio_sn
-		);
+ sound : work.sn76489_audio
+    generic map (
+      FAST_IO_G          => '0',
+		MIN_PERIOD_CNT_G   => 17
+    )
+    port map (
+      clk_i        => clock_32,
+      en_clk_psg_i => mhz4_clken,
+      ce_n_i       => sound_enable_n,
+      wr_n_i       => sound_enable_n,
+      ready_o      => open,
+      data_i       => sys_via_pa_out,
+      mix_audio_o  => audio_sn
+    );
 
 --------------------------------------------------------
 -- Reset generation

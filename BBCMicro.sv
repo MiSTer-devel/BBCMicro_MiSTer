@@ -550,10 +550,10 @@ begin
 	
 end
 
-wire [7:0] audio_sn;
+wire [13:0] audio_sn;
 
-assign AUDIO_L = {audio_sn, 8'd0};
-assign AUDIO_R = {audio_sn, 8'd0};
+assign AUDIO_L = {1'b0,audio_sn, 1'b0};
+assign AUDIO_R = {1'b0,audio_sn, 1'b0};
 assign AUDIO_MIX = 0;
 assign AUDIO_S = 0;
 
