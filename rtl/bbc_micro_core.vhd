@@ -268,6 +268,7 @@ constant crtc_lpstb     : std_logic := '0';
 signal crtc_ma          : std_logic_vector(13 downto 0);
 signal crtc_ra          : std_logic_vector(4 downto 0);
 signal crtc_hblank      : std_logic;
+signal slow_crtc_hblank : std_logic_vector(1 downto 0);
 
 -- Decoded display address after address translation for hardware
 -- scrolling
@@ -1468,8 +1469,20 @@ begin
     video_blue  <= b_out;
     video_cepix <= crtc_cepix when clk_sel = '1' else ttxt_clken;
     video_sel   <= clk_sel;
-    video_hblank<= crtc_hblank when clk_sel = '1' else ttxt_hblank;
-
+	 -- delay hblank by a pixel to fix right hand side problem
+    --video_hblank<= crtc_hblank when clk_sel = '1' else ttxt_hblank;
+	 video_hblank<= slow_crtc_hblank(1) when clk_sel = '1' else ttxt_hblank;
+	 
+	 -- Pass delayed crtc_hblank to external EMU module to prevent last pixel on line being cut off
+	 process(clock_32) 
+	 begin
+		if rising_edge(clock_32) then
+            if vid_clken = '1' then
+					slow_crtc_hblank <= slow_crtc_hblank(0) & crtc_hblank;
+				end if;
+		end if;
+	 end process;
+	 
 -----------------------------------------------
 -- Master 128 additions
 -----------------------------------------------
